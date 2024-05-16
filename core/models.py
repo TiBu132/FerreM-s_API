@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 
 # Create your models here.
 
@@ -8,7 +9,12 @@ class Producto(models.Model):
     valor_producto=models.IntegerField()
     descripcion_producto=models.CharField(max_length=120)
     tipo_producto=models.ForeignKey("Tipo_producto",on_delete=models.CASCADE, default="Sin tipo", to_field="tipo_producto")
-    
+
+    @property
+    def cantidad_stock(self):
+        return Stock.objects.filter(nombre_producto=self).aggregate(total=Sum('cantidad_stock'))['total'] or 0
+
+
     def __str__(self):
         return self.nombre_producto
     
