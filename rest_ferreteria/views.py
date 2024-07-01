@@ -31,11 +31,17 @@ class ProductView(APIView):
     def post(self,request):
         try:
             data = JSONParser().parse(request)
+            tipo_producto_id=data.get('tipo_producto')
+
+            if not tipo_producto_id:
+                return JsonResponse({'error': 'Tipo de producto es requerido'}, status=400)
+
+            tipo_producto = Tipo_Producto.objects.get(tipo_producto=tipo_producto_id)
             Producto.objects.create(
                 nombre_producto=data['nombre_producto'],
                 valor_producto=data['valor_producto'],
                 descripcion_producto=data['descripcion_producto'],
-                tipo_producto_id=data['tipo_producto'],
+                tipo_producto=tipo_producto,
             )
             
             return JsonResponse({"mensaje":"El Producto se ha registrado exitosamente"}, status=200) 
@@ -68,8 +74,14 @@ class ProductView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
     
 class StockView(APIView):
-    def get(self, request):
-        serializer = StockSerializer(Stock.objects.all(), many=True)
+    def get(self, request, nombre_producto=None):
+        if nombre_producto is not None:
+            print("Nombre de producto recibido:", nombre_producto)
+            stock= Stock.objects.filter(nombre_producto=nombre_producto)
+        else:
+            stock= Stock.objects.all()
+
+        serializer=StockSerializer(stock, many=True)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
     
     def post(self,request):
